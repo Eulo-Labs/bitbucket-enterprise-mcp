@@ -72,19 +72,6 @@ Tools:
 | ------------- | ---------------------------------------------------- |
 | `search_code` | Search for code in repositories across the workspace |
 
-## Architecture
-
-```txt
-Claude Code  ──HTTP POST──▶  Forge Web Trigger  ──▶  MCP Handler  ──▶  Bitbucket REST API
-                                                         │
-                                              OAuth 2.0 (Bitbucket)
-                                              Sessions (Forge KVS)
-```
-
-- **Transport:** Streamable HTTP via a Forge web trigger (dynamic response)
-- **Auth:** OAuth 2.0 with PKCE — users authenticate via Bitbucket, tokens stored in Forge KVS
-- **Sessions:** KVS-backed with 30-minute TTL
-
 ## Setup Guide
 
 ### Administrator Setup
@@ -169,6 +156,19 @@ Most clients will prompt you to Authenticate under /mcp.
 This will open the browser and ask you to give consent to the app connecting to Bitbucket on your behalf.
 
 Scopes approved are clearly displayed.
+
+## Architecture
+
+```txt
+Claude Code  ──HTTP POST──▶  Forge Web Trigger  ──▶  MCP Handler  ──▶  Bitbucket REST API
+                                                         │
+                                              OAuth 2.0 (Bitbucket)
+                                              Sessions (Forge KVS)
+```
+
+- **Transport:** Streamable HTTP via a Forge web trigger (dynamic response)
+- **Auth:** OAuth 2.0 with PKCE — users authenticate via Bitbucket, tokens stored in Forge KVS
+- **Sessions:** KVS-backed with 30-minute TTL
 
 ## Development
 
