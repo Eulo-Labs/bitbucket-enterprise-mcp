@@ -1,5 +1,7 @@
 # Bitbucket Enterprise MCP Server on Atlassian Forge
 
+[![CI](https://github.com/Eulo-Labs/bitbucket-enterprise-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/Eulo-Labs/bitbucket-enterprise-mcp/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/Eulo-Labs/bitbucket-enterprise-mcp/actions/workflows/codeql.yml/badge.svg)](https://github.com/Eulo-Labs/bitbucket-enterprise-mcp/actions/workflows/codeql.yml)
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/Eulo-Labs/bitbucket-enterprise-mcp/badge)](https://securityscorecards.dev/viewer/?uri=github.com/Eulo-Labs/bitbucket-enterprise-mcp)
 
 A [Model Context Protocol](https://modelcontextprotocol.io/) (MCP) server for Bitbucket that runs natively inside Atlassian Forge with admin controls and audit logging.
