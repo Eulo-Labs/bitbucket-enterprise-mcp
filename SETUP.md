@@ -12,34 +12,39 @@ Install the Bitbucket Enterprise MCP Server by App Installation link (soon to be
 
 1. Click the link above, choose your site and click Install
 2. Once installed, continue to the next step below
+   > **NOTE:** You can also self-host by deploying this Forge app to your own Atlassian site instead. See the [Development](../README.md#development) section for instructions.
 
-> **NOTE:** You can also self-host by deploying this Forge app to your own Atlassian site instead. See the [Development](../README.md#development) section for instructions.
+<img src="./screenshots/install-from-link.png" width="600" />
 
 ### 2. Create a Bitbucket OAuth Consumer
 
-1. Go to Bitbucket workspace settings: **Settings > OAuth consumers > Add consumer**
-2. Fill in:
-   - **Name:** `bitbucket-mcp-server` (or any name you prefer)
-   - **Callback URL:** Copy from the admin panel's **Settings** tab (shown as a read-only "OAuth Callback URL" field)
-   - **Permissions:** Select the permissions (Account Read, Repositories Read/Write, Pull Request Read/Write, Pipelines Read/Write, Projects Read, Workspace Membership Read)
-3. Save and note the **Key** (client ID) and **Secret** (client secret)
+1. In Bitbucket, navigate to: **Workspace Settings > Forge Apps > MCP Server Settings**
+2. Copy the **OAuth Callback URL**
 
-### 3. Configure the App via Admin Panel
+<img src="./screenshots/oauth-callback-url.png" width="600" />
 
-1. In Bitbucket, go to your workspace: **Workspace Settings > Forge Apps > MCP Server Settings**
-2. The **Settings** tab displays two read-only fields:
-   - **MCP Endpoint URL** — the auto-generated web trigger URL (use this in step 3)
-   - **OAuth Callback URL** — use this when creating the OAuth consumer in step 1
-3. Enter the OAuth credentials from step 2:
+3. Click on the Workspace Settings link under the OAuth Configuration section at the top of the page.
+4. Fill out the OAuth Consumer form like this:
+
+<img src="./screenshots/oauth-consumer-add-filled.png" width="600" />
+
+5. Save and note the **Key** (client ID) and **Secret** (client secret)
+
+### 3. Complete Configuration on Admin Panel
+
+1. Go back to the MCP Server Settings page
+2. Enter the OAuth credentials from the last step:
    - **Client ID:** the Key from step 2
    - **Client Secret:** the Secret from step 2
-4. Save the configuration
+3. Save the configuration
 
 ## User Setup
 
 ### 1. Configure your AI Client
 
-Copy the **MCP Endpoint URL** from the admin panel's Settings tab (see Administrator step 3), then configure your AI client.
+Copy the **MCP Endpoint URL** from the admin panel's Settings tab, then configure your AI client as below.
+
+<img src="./screenshots/mcp-server-url.png" width="600" />
 
 #### Claude Code
 
@@ -79,4 +84,4 @@ Most clients will prompt you to Authenticate under /mcp.
 
 This will open the browser and ask you to give consent to the app connecting to Bitbucket on your behalf.
 
-Scopes approved are clearly displayed.
+Scopes to approve are clearly displayed.
