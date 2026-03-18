@@ -1,0 +1,6 @@
+set -e
+pnpm audit || true
+pnpm dlx lint-staged
+pnpm lint
+pnpm typecheck
+pnpm test

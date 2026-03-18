@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions: read-all
+
+jobs:
+  compile-lint-test:
+    name: Compile, Typecheck, Lint & Test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    container:
+      image: node:22-alpine
+
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Enable corepack
+        run: corepack enable
+
+      - name: Install pnpm
+        run: corepack prepare pnpm@10.30.3 --activate
+
+      - name: Set up pnpm store
+        run: |
+          echo "PNPM_HOME=$GITHUB_WORKSPACE/.pnpm-global" >> "$GITHUB_ENV"
+          echo "$GITHUB_WORKSPACE/.pnpm-global" >> "$GITHUB_PATH"
+
+      - name: Cache pnpm store
+        uses: actions/cache@cdf6c1fa76f9f475f3d7449005a359c84ca0f306 # v5.0.3
+        with:
+          path: |
+            ${{ github.workspace }}/.pnpm-store
+            ${{ github.workspace }}/.corepack-cache
+            ${{ github.workspace }}/.pnpm-global
+          key: pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: pnpm-
+
+      - name: Install dependencies
+        run: pnpm install
+        env:
+          PNPM_STORE_DIR: ${{ github.workspace }}/.pnpm-store
+
+      - name: Install Forge CLI
+        run: pnpm add -g @forge/cli
+
+      - name: Build
+        run: pnpm build:all
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Forge lint
+        run: |
+          pnpm exec forge settings set usage-analytics false
+          pnpm exec forge lint
+
+      - name: Test
+        run: pnpm test

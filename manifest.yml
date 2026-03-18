@@ -1,0 +1,58 @@
+modules:
+  webtrigger:
+    - key: mcp-endpoint
+      function: mcpHandler
+      response:
+        type: dynamic
+  function:
+    - key: mcpHandler
+      handler: index.handleMcpRequest
+    - key: adminResolver
+      handler: index.handleAdminRequest
+    - key: sqlMigrations
+      handler: index.runSqlMigrations
+  scheduledTrigger:
+    - key: sql-migrations-schedule
+      function: sqlMigrations
+      interval: hour
+  trigger:
+    - key: migrations-on-install
+      function: sqlMigrations
+      events:
+        - avi:forge:installed:app
+    - key: migrations-on-upgrade
+      function: sqlMigrations
+      events:
+        - avi:forge:upgraded:app
+  bitbucket:workspaceSettingsMenuPage:
+    - key: bitbucket-remote-admin
+      resource: admin-ui
+      resolver:
+        function: adminResolver
+      title: Enterprise MCP Settings
+  sql:
+    - key: db
+      engine: mysql
+resources:
+  - key: admin-ui
+    path: static/admin/build
+permissions:
+  scopes:
+    - storage:app
+    - read:workspace:bitbucket
+  external:
+    fetch:
+      backend:
+        - address: https://bitbucket.org
+        - address: https://api.bitbucket.org
+        - address: eu.i.posthog.com
+          category: analytics
+      client:
+        - address: eu.i.posthog.com
+          category: analytics
+app:
+  runtime:
+    name: nodejs22.x
+    memoryMB: 512
+    architecture: arm64
+  id: ari:cloud:ecosystem::app/f29fdb13-c3ac-4e38-a7be-9ca0d8d5b6ac

@@ -1,0 +1,10 @@
+export { listPullRequests } from './list-pull-requests';
+export { listWorkspacePullRequests } from './list-workspace-pull-requests';
+export { getPullRequest } from './get-pull-request';
+export { createPullRequest } from './create-pull-request';
+export { getPullRequestDiff } from './get-pull-request-diff';
+export { listPullRequestComments } from './list-pull-request-comments';
+export { createPullRequestComment } from './create-pull-request-comment';
+export { approvePullRequest } from './approve-pull-request';
+export { unapprovePullRequest } from './unapprove-pull-request';
+export { mergePullRequest } from './merge-pull-request';

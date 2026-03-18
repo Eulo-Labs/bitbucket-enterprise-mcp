@@ -1,0 +1,4 @@
+#!/bin/sh
+set -e
+echo "Running forge install --upgrade ..."
+forge install --non-interactive --upgrade --site bitbucket.org/eulolab --product bitbucket --environment development || { echo "Install failed."; exit 1; }

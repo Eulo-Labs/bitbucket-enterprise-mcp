@@ -1,0 +1,11 @@
+.env.local
+local-docs/
+node_modules/
+dist/
+.forge/
+static/admin/build/
+*.js.map
+*.d.ts
+*.tsbuildinfo
+.env
+bitbucket-pipelines.yml

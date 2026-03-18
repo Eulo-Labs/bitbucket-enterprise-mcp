@@ -1,0 +1,91 @@
+import { getAppContext } from '@forge/api';
+import { sql } from '@forge/sql';
+
+const executeSql = async (req: {
+  body: string;
+}): Promise<ReturnType<typeof getHttpResponse>> => {
+  console.log('\n=== Executing Custom SQL Query ===');
+
+  if (getAppContext()?.environmentType === `PRODUCTION`) {
+    const errorMsg = `executeSql is disabled in PRODUCTION for security.`;
+    console.log(errorMsg);
+    return getHttpResponse(403, {
+      success: false,
+      error: errorMsg,
+    });
+  }
+
+  const payload = req.body;
+  let query: string | undefined;
+
+  try {
+    const sqlRequest: { query?: string } | null = JSON.parse(payload);
+    query = sqlRequest?.query;
+
+    if (!query) {
+      return getHttpResponse(400, {
+        success: false,
+        error: 'No SQL query provided',
+      });
+    }
+
+    console.log('Executing query:', query);
+
+    // Import sql directly for custom queries
+    const result = await sql.executeRaw(query);
+
+    console.log('Query result:', result);
+
+    return getHttpResponse(200, {
+      success: true,
+      rows: result.rows || [],
+      rowCount: result.rows?.length || 0,
+      query,
+    });
+  } catch (error: unknown) {
+    console.error('Error while executing sql:', error);
+    if (error instanceof Error && 'context' in error) {
+      const ctx = (error as Error & { context?: { debug?: unknown } }).context;
+      console.error(
+        'Error context.debug:',
+        JSON.stringify(ctx?.debug, null, 2),
+      );
+    }
+
+    const errorMessage = error instanceof Error ? error.message : String(error);
+
+    return getHttpResponse(500, {
+      success: false,
+      error: errorMessage,
+      ...(query && { query }),
+    });
+  }
+};
+
+function getHttpResponse(
+  statusCode: number,
+  body: Record<string, unknown>,
+): {
+  headers: { 'Content-Type': string[] };
+  statusCode: number;
+  statusText: string;
+  body: string;
+} {
+  const statusTexts: Record<number, string> = {
+    200: 'OK',
+    400: 'Bad Request',
+    403: 'Forbidden',
+    404: 'Not Found',
+    500: 'Internal Server Error',
+  };
+  const statusText = statusTexts[statusCode] || 'Bad Request';
+
+  return {
+    headers: { 'Content-Type': ['application/json'] },
+    statusCode,
+    statusText,
+    body: JSON.stringify(body),
+  };
+}
+
+export { executeSql };

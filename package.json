@@ -1,0 +1,73 @@
+{
+  "name": "bitbucket-enterprise-mcp",
+  "version": "0.1.0",
+  "private": false,
+  "type": "module",
+  "description": "Enterprise MCP Server for Bitbucket",
+  "license": "FSL-1.1-ALv2",
+  "scripts": {
+    "build:forge": "forge build",
+    "build:admin": "vite build -c vite.admin.config.js",
+    "build:all": "pnpm build:admin",
+    "dev:admin": "vite serve -c vite.admin.config.js",
+    "lint": "eslint src/",
+    "lint:forge": "forge lint",
+    "typecheck": "tsc --noEmit",
+    "fixstyle": "prettier --write .",
+    "deploy": "forge deploy",
+    "install:forge": "forge install",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "knip": "knip",
+    "knip:fix": "knip --fix",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "**/*.{ts,tsx,js,jsx,json,md,yaml,yml}": [
+      "pnpm fixstyle"
+    ]
+  },
+  "dependencies": {
+    "@atlaskit/button": "^23.10.0",
+    "@atlaskit/checkbox": "^17.3.6",
+    "@atlaskit/css-reset": "^7.3.13",
+    "@atlaskit/lozenge": "^13.5.0",
+    "@atlaskit/section-message": "^8.12.7",
+    "@atlaskit/spinner": "^19.0.11",
+    "@atlaskit/tabs": "^18.3.5",
+    "@atlaskit/textfield": "^8.2.3",
+    "@atlaskit/toggle": "^15.2.13",
+    "@atlaskit/tooltip": "^20.14.7",
+    "@forge/api": "^5.2.1",
+    "@forge/bridge": "^4.2.0",
+    "@forge/kvs": "^1.0.0",
+    "@forge/resolver": "^1.6.26",
+    "@forge/sql": "^3.0.19",
+    "@posthog/react": "^1.8.2",
+    "posthog-js": "^1.360.2",
+    "posthog-node": "^5.28.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "safe-regex2": "^5.1.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^22.0.0",
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "eslint": "^10.0.3",
+    "husky": "^9.1.7",
+    "knip": "^5.86.0",
+    "lint-staged": "^16.1.0",
+    "prettier": "^3.8.1",
+    "typescript": "^5.7.0",
+    "typescript-eslint": "^8.56.1",
+    "vite": "^6.0.3",
+    "vite-plugin-singlefile": "^2.0.3",
+    "vitest": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}

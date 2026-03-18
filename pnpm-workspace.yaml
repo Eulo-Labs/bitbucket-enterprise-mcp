@@ -1,0 +1,2 @@
+allowBuilds:
+  '@forge/cli': true
