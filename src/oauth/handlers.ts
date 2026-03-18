@@ -27,7 +27,9 @@ import {
   buildAtlassianAuthUrl,
   exchangeAtlassianCode,
   getAtlassianUser,
+  getAtlassianUserEmail,
 } from './atlassian';
+import { db } from '../db/service';
 
 function jsonResponse(
   statusCode: number,
@@ -311,6 +313,22 @@ export async function handleCallback(
     const message = err instanceof Error ? err.message : String(err);
     console.error('Atlassian user lookup failed:', message);
     return errorResponse(500, 'server_error', 'Failed to get user identity');
+  }
+
+  // Cache user profile so audit log can show name/avatar immediately.
+  // Done here (rather than fire-and-forget on first tool call) to avoid
+  // the serverless function terminating before HTTP calls complete on
+  // new installs where the user is not yet in the users table.
+  try {
+    const email = await getAtlassianUserEmail(atlassianTokens.access_token);
+    await db.upsertUser({
+      account_id: user.account_id,
+      display_name: user.display_name,
+      email,
+      avatar_url: user.avatar_url,
+    });
+  } catch (err) {
+    console.error('[oauth] Failed to cache user profile:', err);
   }
 
   // Mint MCP authorization code
