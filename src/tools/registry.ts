@@ -73,7 +73,7 @@ register(triggerPipeline);
 /** Check if read-only mode is enabled */
 async function isReadOnlyMode(): Promise<boolean> {
   const val = await store.get(KVS_PREFIX.READ_ONLY_MODE);
-  return val === true;
+  return val !== false;
 }
 
 /** Get all tool definitions for tools/list - excludes disabled tools and write tools in read-only mode */

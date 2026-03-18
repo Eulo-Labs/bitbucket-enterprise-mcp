@@ -149,12 +149,13 @@ describe('getToolKeys()', () => {
 });
 
 describe('getToolDefinitions()', () => {
-  it('returns all tools when no KVS flags are set', async () => {
+  it('returns only read tools when no KVS flags are set (default read-only)', async () => {
     const defs = await getToolDefinitions();
-    expect(defs.length).toBeGreaterThan(0);
     const names = defs.map((d) => d.name);
     expect(names).toContain('list_repositories');
-    expect(names).toContain('create_pull_request');
+    for (const writeId of WRITE_TOOL_IDS) {
+      expect(names).not.toContain(writeId);
+    }
   });
 
   it('excludes write tools when read-only-mode is true', async () => {
