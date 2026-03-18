@@ -18,18 +18,65 @@ import type { OAuthConfig } from '../oauth/types';
 import { getAuditLogs } from '../audit/log';
 import { db } from '../db/service';
 import { validateWorkspace } from './validation';
-import { runSqlMigrations } from '../db/migrations';
 
-let migrationsApplied = false;
+let webTriggerUrlCache: string | null = null;
 
 const resolver = new Resolver();
 
-resolver.define('getOAuthConfig', async (req) => {
-  if (!migrationsApplied) {
-    await runSqlMigrations();
-    migrationsApplied = true;
+resolver.define('getAdminPageData', async (req) => {
+  const ctx = req.context as Record<string, unknown> | undefined;
+  const workspaceId = ctx?.workspaceId as string | undefined;
+
+  // Fetch all KVS values in parallel
+  const [config, toolsData, readOnlyData, cachedSlug] = await Promise.all([
+    store.get(KVS_PREFIX.CONFIG) as Promise<OAuthConfig | null>,
+    store.get(KVS_PREFIX.TOOLS_CONFIG) as Promise<Record<
+      string,
+      boolean
+    > | null>,
+    store.get(KVS_PREFIX.READ_ONLY_MODE) as Promise<boolean | null>,
+    store.get('workspace') as Promise<string | null>,
+  ]);
+
+  // Cache web trigger URL in memory
+  if (!webTriggerUrlCache) {
+    webTriggerUrlCache = await webTrigger.getUrl('mcp-endpoint');
   }
 
+  // Auto-save workspaceId from context (preserve existing behavior)
+  if (workspaceId && !cachedSlug) {
+    await store.set('workspace', workspaceId);
+  }
+
+  // Resolve workspace slug: use KVS cache, else fetch from Bitbucket
+  let workspaceSlug = cachedSlug;
+  if (!workspaceSlug && workspaceId) {
+    try {
+      const res = await api
+        .asApp()
+        .requestBitbucket(route`/2.0/workspaces/${workspaceId}`);
+      if (res.ok) {
+        const data = (await res.json()) as { slug?: string };
+        workspaceSlug = data.slug ?? null;
+        if (workspaceSlug) await store.set('workspace', workspaceSlug);
+      }
+    } catch {
+      /* ignore */
+    }
+  }
+
+  return {
+    oauthConfig: config
+      ? { configured: true, clientId: config.clientId }
+      : { configured: false },
+    webTriggerUrl: webTriggerUrlCache ?? '',
+    toolsConfig: toolsData ?? {},
+    readOnly: readOnlyData !== false,
+    workspaceSlug: workspaceSlug ?? null,
+  };
+});
+
+resolver.define('getOAuthConfig', async (req) => {
   // Auto-save workspace from Forge context (UUID works in Bitbucket API paths)
   const ctx = req.context as Record<string, unknown> | undefined;
   const workspaceId = ctx?.workspaceId as string | undefined;

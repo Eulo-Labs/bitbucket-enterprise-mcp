@@ -1,32 +1,23 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import Tabs, { Tab, TabList, TabPanel } from '@atlaskit/tabs';
-import { invoke, getContext, isMockBridgeEnabled } from './bridge';
+import { invoke, isMockBridgeEnabled } from './bridge';
 import { captureEvent } from './posthog';
 import AuditLogTab from './AuditLogTab';
 import SettingsTab from './SettingsTab';
 import ToolsTab from './ToolsTab';
 import { WRITE_TOOL_IDS } from '../../src/tools/write-tools';
 
-type OAuthConfigResponse = {
-  configured: boolean;
-  clientId?: string;
-};
-
-type WebTriggerUrlResponse = {
-  url: string;
+type AdminPageData = {
+  oauthConfig: { configured: boolean; clientId?: string };
+  webTriggerUrl: string;
+  toolsConfig: Record<string, boolean>;
+  readOnly: boolean;
+  workspaceSlug: string | null;
 };
 
 type SaveResponse = {
   success: boolean;
   error?: string;
-};
-
-type ToolsConfigResponse = {
-  tools: Record<string, boolean>;
-};
-
-type ReadOnlyResponse = {
-  readOnly: boolean;
 };
 
 const MAX_CLIENT_ID_LENGTH = 128;
@@ -80,54 +71,29 @@ export default function App() {
     let isMounted = true;
     const load = async () => {
       try {
-        const [configData, urlData, , toolsData, readOnlyData, slugData] =
-          await Promise.all([
-            invoke<OAuthConfigResponse>('getOAuthConfig').catch((err) => {
-              console.warn('[admin] getOAuthConfig failed:', err);
-              setConnectionError(
-                err instanceof Error
-                  ? err.message
-                  : 'Failed to fetch configuration',
-              );
-              return null;
-            }),
-            invoke<WebTriggerUrlResponse>('getWebTriggerUrl').catch((err) => {
-              console.warn('[admin] getWebTriggerUrl failed:', err);
-              setConnectionError(
-                err instanceof Error
-                  ? err.message
-                  : 'Failed to fetch configuration',
-              );
-              return null;
-            }),
-            getContext().catch((err) => {
-              console.warn('[admin] getContext failed:', err);
-              return {};
-            }),
-            invoke<ToolsConfigResponse>('getToolsConfig').catch((err) => {
-              console.warn('[admin] getToolsConfig failed:', err);
-              return { tools: {} };
-            }),
-            invoke<ReadOnlyResponse>('getReadOnlyMode').catch((err) => {
-              console.warn('[admin] getReadOnlyMode failed:', err);
-              return { readOnly: true };
-            }),
-            invoke<{ slug: string | null }>('getWorkspaceSlug').catch(() => ({
-              slug: null,
-            })),
-          ] as const);
+        const data = await invoke<AdminPageData>('getAdminPageData').catch(
+          (err) => {
+            console.warn('[admin] getAdminPageData failed:', err);
+            setConnectionError(
+              err instanceof Error
+                ? err.message
+                : 'Failed to fetch configuration',
+            );
+            return null;
+          },
+        );
         if (!isMounted) return;
-        if (configData) {
-          setConfigured(Boolean(configData.configured));
-          if (configData.clientId) {
-            setClientId(configData.clientId);
-            setSavedClientId(configData.clientId);
+        if (data) {
+          setConfigured(Boolean(data.oauthConfig.configured));
+          if (data.oauthConfig.clientId) {
+            setClientId(data.oauthConfig.clientId);
+            setSavedClientId(data.oauthConfig.clientId);
           }
+          if (data.webTriggerUrl) setWebTriggerUrl(data.webTriggerUrl);
+          setToolsConfig(data.toolsConfig);
+          setReadOnly(data.readOnly);
+          if (data.workspaceSlug) setWorkspaceSlug(data.workspaceSlug);
         }
-        if (urlData?.url) setWebTriggerUrl(urlData.url);
-        if (toolsData?.tools) setToolsConfig(toolsData.tools);
-        if (readOnlyData) setReadOnly(readOnlyData.readOnly);
-        if (slugData?.slug) setWorkspaceSlug(slugData.slug);
       } catch {
         if (!isMounted) return;
         setMessage({

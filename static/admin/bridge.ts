@@ -6,6 +6,28 @@ const isLocalhost =
 // In dev mode on localhost outside Forge iframe, use mock bridge automatically.
 const isStandalone = import.meta.env.DEV && !isInIframe && isLocalhost;
 
+const MOCK_TOOLS_CONFIG: Record<string, boolean> = {
+  list_repositories: true,
+  get_repository: true,
+  list_pull_requests: true,
+  list_workspace_pull_requests: true,
+  get_pull_request: true,
+  get_pull_request_diff: true,
+  list_pull_request_comments: true,
+  list_pipelines: true,
+  list_pipeline_steps: true,
+  get_pipeline_step_log: true,
+  get_file_content: true,
+  list_directory: true,
+  list_branches: true,
+  create_pull_request: true,
+  create_pull_request_comment: true,
+  approve_pull_request: true,
+  unapprove_pull_request: true,
+  merge_pull_request: true,
+  trigger_pipeline: true,
+};
+
 export const invoke = async <T>(
   functionKey: string,
   payload?: unknown,
@@ -14,6 +36,15 @@ export const invoke = async <T>(
     console.warn(`[Bridge Mock] invoke called: ${functionKey}`, payload);
     if (functionKey === 'getEnvironment') {
       return { environmentType: 'DEVELOPMENT' } as T;
+    }
+    if (functionKey === 'getAdminPageData') {
+      return {
+        oauthConfig: { configured: false },
+        webTriggerUrl: 'https://example.atlassian-dev.net/x1/mock-trigger',
+        toolsConfig: MOCK_TOOLS_CONFIG,
+        readOnly: false,
+        workspaceSlug: 'mock-workspace',
+      } as T;
     }
     if (functionKey === 'getOAuthConfig') {
       return { configured: false } as T;
@@ -25,29 +56,7 @@ export const invoke = async <T>(
       return { logs: [], total: 0, page: 1, pageSize: 50 } as T;
     }
     if (functionKey === 'getToolsConfig') {
-      return {
-        tools: {
-          list_repositories: true,
-          get_repository: true,
-          list_pull_requests: true,
-          list_workspace_pull_requests: true,
-          get_pull_request: true,
-          get_pull_request_diff: true,
-          list_pull_request_comments: true,
-          list_pipelines: true,
-          list_pipeline_steps: true,
-          get_pipeline_step_log: true,
-          get_file_content: true,
-          list_directory: true,
-          list_branches: true,
-          create_pull_request: true,
-          create_pull_request_comment: true,
-          approve_pull_request: true,
-          unapprove_pull_request: true,
-          merge_pull_request: true,
-          trigger_pipeline: true,
-        },
-      } as T;
+      return { tools: MOCK_TOOLS_CONFIG } as T;
     }
     if (functionKey === 'getReadOnlyMode') {
       return { readOnly: false } as T;
@@ -65,28 +74,6 @@ export const invoke = async <T>(
   }
   const { invoke: forgeInvoke } = await import('@forge/bridge');
   return forgeInvoke<T>(functionKey, payload);
-};
-
-export const getContext = async (): Promise<{
-  workspaceId?: string;
-  environmentType?: string;
-}> => {
-  if (isStandalone) {
-    console.warn('[Bridge Mock] getContext called');
-    return {
-      workspaceId: 'mock-uuid',
-      environmentType: 'DEVELOPMENT',
-    };
-  }
-  const { getContext: forgeGetContext } = await import('@forge/bridge');
-  const ctx = await forgeGetContext();
-  const ext = ctx.extension as Record<string, unknown> | undefined;
-  const workspace = ext?.workspace as Record<string, unknown> | undefined;
-
-  return {
-    workspaceId: workspace?.uuid as string | undefined,
-    environmentType: ctx.environmentType as string | undefined,
-  };
 };
 
 export const view = {
