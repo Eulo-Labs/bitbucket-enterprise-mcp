@@ -16,9 +16,12 @@ We use several automated tools to continuously audit the codebase. Results are p
 
 To ensure the code you run is the code we audited, we implement the following:
 
+- **Signed Commits**: All maintainers are required to sign commits with GPG/SSH keys.
+
+We are working on adding:
+
 - **Artifact Attestations**: Every release is cryptographically signed using GitHub's artifact attestation system.
 - **Software Bill of Materials (SBOM)**: A machine-readable `SBOM.json` (CycloneDX/SPDX) is attached to every GitHub Release.
-- **Signed Commits**: All maintainers are required to sign commits with GPG/SSH keys.
 
 ## 3. Manual Audit Checklist
 
@@ -32,12 +35,12 @@ In addition to automated scans, the following manual audits are performed period
 ## 4. How to View Results
 
 - **For Users**: Check the badges in the `README.md` and the "Security" tab on GitHub.
-- **For Auditors**: Detailed SARIF reports from CodeQL and SBOM files are available in the **Actions** artifacts and **Releases** page.
+- **For Auditors**: Detailed SARIF reports from CodeQL are available in the **Actions** artifacts.
 - **For Researchers**: Please see our [SECURITY.md](./SECURITY.md) for vulnerability disclosure instructions.
 
 ## 5. Compliance & Standards
 
 This project aims to align with the following standards:
 
-- **OpenSSF OSPS Baseline**: Level 1 (Universal Floor).
+- **OpenSSF Scorecard**: Score of 7 (assessed via [securityscorecards.dev](https://securityscorecards.dev/viewer/?uri=github.com/Eulo-Labs/bitbucket-enterprise-mcp)).
 - **GitHub Security Best Practices**: Enforced via Repository Rules and Branch Protection.
