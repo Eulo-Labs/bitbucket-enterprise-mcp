@@ -104,11 +104,17 @@ forge install --upgrade  # apply manifest changes (new scopes, egress URLs)
 
 ```
 src/
+  admin/      Admin panel resolver and validation (OAuth config management)
+  audit/      Audit logging (fire-and-forget tool usage tracking)
+  bitbucket/  Bitbucket API client wrapper
+  db/         Forge SQL database service
+  kvs/        Forge KVS service wrapper
   mcp/        MCP protocol layer (handler, auth, sessions, protocol helpers)
   oauth/      OAuth 2.0 flow (metadata, registration, authorize, callback, token)
+  posthog/    PostHog analytics client
   tools/      Tool implementations (repos, PRs, pipelines, source, branches)
-  bitbucket/  Bitbucket API client wrapper
-  admin/      Admin panel resolver (OAuth config management)
+  utils/      Shared utilities and validation
+bin/          Development scripts (deploy-dev, install-dev)
 test/         Tests (vitest)
 manifest.yml  Forge app manifest
 ```
