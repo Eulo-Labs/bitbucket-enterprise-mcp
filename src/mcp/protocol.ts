@@ -81,7 +81,7 @@ const CORS_HEADERS: Record<string, string[]> = {
   'Access-Control-Allow-Origin': ['*'],
   'Access-Control-Allow-Methods': ['GET, POST, DELETE, OPTIONS'],
   'Access-Control-Allow-Headers': [
-    'Content-Type, Accept, Authorization, MCP-Protocol-Version, Mcp-Session-Id',
+    'Content-Type, Accept, Authorization, Mcp-Protocol-Version, Mcp-Session-Id',
   ],
   'Access-Control-Expose-Headers': [
     'WWW-Authenticate, Mcp-Session-Id, X-Resource-Metadata',
@@ -107,7 +107,7 @@ export function httpResponse(
 
 /** Check if a JSON-RPC message is a notification (no id) */
 export function isNotification(msg: JsonRpcRequest): boolean {
-  return msg.id === undefined || msg.id === null;
+  return msg.id === undefined;
 }
 
 /** Build a 401 response with WWW-Authenticate header pointing to metadata URL */

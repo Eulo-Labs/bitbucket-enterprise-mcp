@@ -19,7 +19,12 @@ import {
   SERVER_TITLE,
   SERVER_DESCRIPTION,
 } from './protocol';
-import { methodNotFound, internalError, invalidParams } from './errors';
+import {
+  methodNotFound,
+  internalError,
+  invalidParams,
+  invalidRequest,
+} from './errors';
 import { extractBearerToken, authenticateRequest } from './auth';
 import type { AuthResult } from './auth';
 import { createSession, getSession, deleteSession } from './session';
@@ -139,7 +144,7 @@ export async function handleMcpRequest(
   if (result.httpError) return result.httpError;
 
   const headers: Record<string, string[]> = {
-    'MCP-Protocol-Version': [PROTOCOL_VERSION],
+    'Mcp-Protocol-Version': [PROTOCOL_VERSION],
   };
   if (result.newSessionId) {
     headers['Mcp-Session-Id'] = [result.newSessionId];
@@ -155,7 +160,7 @@ export async function handleMcpRequest(
   const isInitialize = messages.method === 'initialize';
   if (isNotification(messages) && !isInitialize) {
     void shutdownPostHog();
-    return httpResponse(204, '', headers);
+    return httpResponse(202, '', headers);
   }
 
   void shutdownPostHog();
@@ -197,7 +202,7 @@ async function routeMessage(
   try {
     switch (msg.method) {
       case 'initialize':
-        return await handleInitialize(msg);
+        return await handleInitialize(msg, session);
 
       case 'notifications/initialized':
         return {};
@@ -236,14 +241,45 @@ async function routeMessage(
   }
 }
 
-async function handleInitialize(msg: JsonRpcRequest): Promise<RouteResult> {
+/** Protocol versions we support, newest first. */
+const SUPPORTED_VERSIONS = [PROTOCOL_VERSION, '2024-11-05'];
+
+async function handleInitialize(
+  msg: JsonRpcRequest,
+  existingSession?: SessionData | null,
+): Promise<RouteResult> {
+  // Reject re-initialization on an existing session (prevents session fixation)
+  if (existingSession) {
+    return {
+      response: jsonRpcError(
+        msg.id ?? null,
+        invalidRequest('Already initialized — use existing session'),
+      ),
+    };
+  }
+
   const params = msg.params as unknown as McpInitializeParams | undefined;
+
+  // Negotiate protocol version: use client's version if we support it, otherwise our latest
+  const requestedVersion = params?.protocolVersion;
+  const negotiatedVersion =
+    requestedVersion && SUPPORTED_VERSIONS.includes(requestedVersion)
+      ? requestedVersion
+      : SUPPORTED_VERSIONS[0];
+
+  if (requestedVersion && !SUPPORTED_VERSIONS.includes(requestedVersion)) {
+    captureEvent(
+      'protocol_version_mismatch',
+      { requested: requestedVersion, negotiated: negotiatedVersion },
+      {},
+    );
+  }
 
   const session = await createSession(params?.clientInfo);
 
   return {
     response: jsonRpcResult(msg.id ?? null, {
-      protocolVersion: PROTOCOL_VERSION,
+      protocolVersion: negotiatedVersion,
       capabilities: {
         tools: { listChanged: false },
         resources: {},

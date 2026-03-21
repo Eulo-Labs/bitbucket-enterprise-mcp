@@ -229,13 +229,13 @@ describe('handleMcpRequest', () => {
     expect(body.result).toEqual({});
   });
 
-  it('handles notifications/initialized with 204', async () => {
+  it('handles notifications/initialized with 202', async () => {
     const event = makeEvent('POST', {
       jsonrpc: '2.0',
       method: 'notifications/initialized',
     });
     const res = await handleMcpRequest(event);
-    expect(res.statusCode).toBe(204);
+    expect(res.statusCode).toBe(202);
   });
 
   it('handles tools/list method with valid session', async () => {
