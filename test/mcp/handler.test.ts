@@ -331,6 +331,32 @@ describe('handleMcpRequest', () => {
     expect(res.statusCode).toBe(400);
   });
 
+  it('handles initialize without an id (sent as notification)', async () => {
+    // The MCP spec requires initialize to be a Request (with id), but some clients
+    // omit the id, making it technically a JSON-RPC notification. Per spec, servers
+    // MUST NOT respond to notifications — but silently dropping initialize would
+    // leave the client hung with no capabilities. We deliberately respond anyway
+    // with id: null (the JSON-RPC 2.0 convention for "couldn't determine request id")
+    // so that lenient clients can still complete the handshake.
+    const event = makeEvent('POST', {
+      jsonrpc: '2.0',
+      // no id field — this is what makes it a notification in JSON-RPC 2.0
+      method: 'initialize',
+      params: {
+        protocolVersion: '2025-11-25',
+        capabilities: {},
+        clientInfo: { name: 'buggy-client', version: '0.1' },
+      },
+    });
+    const res = await handleMcpRequest(event);
+    expect(res.statusCode).toBe(200);
+
+    const body = JSON.parse(res.body);
+    expect(body.result.protocolVersion).toBe(PROTOCOL_VERSION);
+    expect(body.result.serverInfo.name).toBe(SERVER_NAME);
+    expect(body.id).toBeNull();
+  });
+
   it('initialize response includes resources capability', async () => {
     const event = makeEvent('POST', {
       jsonrpc: '2.0',

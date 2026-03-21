@@ -145,7 +145,15 @@ export async function handleMcpRequest(
     headers['Mcp-Session-Id'] = [result.newSessionId];
   }
 
-  if (isNotification(messages)) {
+  // Per JSON-RPC 2.0, a message without an id is a notification and MUST NOT
+  // receive a response. The MCP spec agrees — but it also mandates that servers
+  // respond to `initialize`. Some clients send initialize without an id (treating
+  // it as a fire-and-forget), which would leave them hung with no capabilities.
+  // We intentionally carve out `initialize` from the notification short-circuit
+  // so those clients still complete the handshake. The response carries id: null,
+  // the JSON-RPC 2.0 convention for "couldn't determine the request id".
+  const isInitialize = messages.method === 'initialize';
+  if (isNotification(messages) && !isInitialize) {
     void shutdownPostHog();
     return httpResponse(204, '', headers);
   }
