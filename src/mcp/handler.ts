@@ -74,6 +74,33 @@ export async function handleMcpRequest(
     return httpResponse(200, { ok: true });
   }
 
+  // Handle GET for SSE transport compatibility (HTTP+SSE clients like Postman).
+  // Forge can't hold connections open, so we return a one-shot SSE body with an
+  // `endpoint` event pointing back at this URL. The client uses it as the POST target.
+  if (event.method === 'GET') {
+    const token = extractBearerToken(event.headers);
+    if (!token) {
+      return await buildUnauthorizedResponse(event);
+    }
+    const authResult = await authenticateRequest(token);
+    if (!authResult) {
+      captureEvent('auth_failure', {}, {});
+      void shutdownPostHog();
+      return await buildUnauthorizedResponse(event);
+    }
+
+    const config = await getOAuthConfig();
+    const postUrl =
+      config?.baseUrl ||
+      deriveBaseUrl(event.headers, event.path, event.userPath);
+
+    void shutdownPostHog();
+    return httpResponse(200, `event: endpoint\ndata: ${postUrl}\n\n`, {
+      'Content-Type': ['text/event-stream'],
+      'Cache-Control': ['no-cache'],
+    });
+  }
+
   // Only accept POST for MCP JSON-RPC
   if (event.method !== 'POST') {
     return httpResponse(405, { error: 'Method not allowed' });

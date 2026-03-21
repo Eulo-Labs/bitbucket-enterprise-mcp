@@ -158,10 +158,20 @@ describe('handleMcpRequest', () => {
     vi.clearAllMocks();
   });
 
-  it('returns 405 for non-POST/DELETE methods', async () => {
-    const event = makeEvent('GET', '');
+  it('returns 405 for unsupported methods', async () => {
+    const event = makeEvent('PUT', '');
     const res = await handleMcpRequest(event);
     expect(res.statusCode).toBe(405);
+  });
+
+  it('returns SSE endpoint event for GET (SSE transport compat)', async () => {
+    const event = makeEvent('GET', '');
+    const res = await handleMcpRequest(event);
+    expect(res.statusCode).toBe(200);
+    expect(res.headers['Content-Type']).toEqual(['text/event-stream']);
+    expect(res.headers['Cache-Control']).toEqual(['no-cache']);
+    expect(res.body).toContain('event: endpoint');
+    expect(res.body).toContain('data: https://example.com/mcp');
   });
 
   it('returns 200 for DELETE (session termination)', async () => {
